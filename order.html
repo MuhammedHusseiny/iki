@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Page</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init({
+            publicKey: "raRiUgBcpAipwT8Jc",
+          });
+       })();
+    </script>
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f0f2f5;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    h1 {
+        color: #2c3e50;
+        margin-bottom: 30px;
+        font-size: 32px;
+    }
+
+    .order-form {
+        width: 100%;
+        max-width: 800px;
+        background-color: #ffffff;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .order-details {
+        margin-bottom: 20px;
+    }
+
+    .order-details div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 15px;
+    }
+
+    .order-details img {
+        margin-right: 20px;
+        border-radius: 8px;
+        width: 120px;
+        height: auto;
+    }
+
+    .order-details h2 {
+        font-size: 20px;
+        color: #34495e;
+        margin: 0;
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+    }
+
+    .order-details p {
+        font-size: 18px;
+        color: red;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    .quantity {
+        background-color: #e74c3c;
+        color: #ffffff;
+        border-radius: 50%;
+        padding: 5px 10px;
+        margin-left: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+    }
+
+    .total {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+    form {
+        width: 100%;
+        max-width: 500px;
+    }
+
+    label {
+        display: block;
+        margin: 10px 0 5px;
+        font-weight: bold;
+    }
+
+    input, textarea, select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+    }
+
+    button {
+        background-color: #3498db;
+        color: #ffffff;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    button:hover {
+        background-color: #2980b9;
+    }
+
+    .empty-message {
+        color: #7f8c8d;
+        font-size: 18px;
+        text-align: center;
+    }
+
+    .confirmation-message{ 
+        font-size: 20px;
+        font-weight: bold;
+        color: #27ae60;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+    <h1>Order Details</h1>
+    <div class="order-form">
+        <div id="order-details" class="order-details"></div>
+        <div class="total" id="total-amount">Total Amount: 0 EGP</div>
+
+        <form id="order-form">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" required>
+            <label for="address">Address:</label>
+            <textarea id="address" rows="4" required></textarea>
+            <label for="delivery">Delivery Fees:</label>
+            <select id="delivery" required>
+                <option value="">Select Delivery Fee</option>
+                <option value="70">CAIRO & GIZA: 70 EGP</option>
+                <option value="100">OTHER CITIES: 100 EGP</option>
+            </select>
+            <input type="hidden" id="total-amount-input">
+            <button type="submit">Submit Order</button>
+        </form>
+    </div>
+
+    <script>
+        // Initialize EmailJS
+        emailjs.init("bNZ44Oqg1PirPy8rs");
+    
+        let fixedDeliveryFee = null; // متغير لتخزين قيمة رسوم التوصيل بشكل ثابت
+    
+        function displayOrderDetails() {
+            const orderDetails = JSON.parse(localStorage.getItem('cart')) || [];
+            const orderDetailsContainer = document.getElementById('order-details');
+            const totalAmountElement = document.getElementById('total-amount');
+            const totalAmountInput = document.getElementById('total-amount-input');
+            orderDetailsContainer.innerHTML = '';
+    
+            let total = 0;
+            const productSummary = {};
+    
+            if (orderDetails.length > 0) {
+                // Summarize products to avoid duplication
+                orderDetails.forEach(item => {
+                    if (item.title && item.price && item.size) {
+                        const productKey = `${item.title} (${item.size})`;
+    
+                        if (productSummary[productKey]) {
+                            productSummary[productKey].quantity++;
+                            productSummary[productKey].totalPrice = productSummary[productKey].price * productSummary[productKey].quantity;
+                        } else {
+                            productSummary[productKey] = {
+                                quantity: 1,
+                                price: item.price,
+                                totalPrice: item.price,
+                            };
+                        }
+    
+                        total += item.price;
+                    }
+                });
+    
+                // Display products
+                Object.keys(productSummary).forEach(productName => {
+                    const item = productSummary[productName];
+                    const itemElement = document.createElement('div');
+                    itemElement.innerHTML = `
+                        <div>
+                            <h2>${productName} <span class="quantity">${item.quantity}</span></h2>
+                            <p>${item.totalPrice.toFixed(2)} EGP</p>
+                        </div>
+                    `;
+                    orderDetailsContainer.appendChild(itemElement);
+                });
+    
+                // Update total amount
+                const totalWithFee = fixedDeliveryFee !== null ? total + fixedDeliveryFee : total;
+                totalAmountElement.textContent = `Total Amount: ${totalWithFee.toFixed(2)} EGP`;
+                totalAmountInput.value = totalWithFee.toFixed(2);
+            } else {
+                orderDetailsContainer.innerHTML = '<p class="empty-message">Your cart is empty.</p>';
+            }
+        }
+    
+        function setDeliveryFee() {
+            // تعيين رسوم التوصيل وتحديث المجموع الكلي إذا لم تكن قد تم تعيينها من قبل
+            if (fixedDeliveryFee === null) {
+                fixedDeliveryFee = parseFloat(document.getElementById('delivery').value) || 0;
+                displayOrderDetails();
+            }
+        }
+    
+        document.addEventListener('DOMContentLoaded', () => {
+            displayOrderDetails();
+            document.getElementById('delivery').addEventListener('change', setDeliveryFee);
+        });
+    
+        document.getElementById('order-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const totalAmount = parseFloat(document.getElementById('total-amount-input').value) || 0;
+    
+            const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+    
+            if (name && address && phone) {
+                // Create a product summary with quantities and sizes
+                let productDetails = '';
+                const productSummary = {};
+    
+                cartItems.forEach(item => {
+                    if (item.title && item.size) {
+                        const productKey = `${item.title} (${item.size})`;
+    
+                        if (productSummary[productKey]) {
+                            productSummary[productKey]++;
+                        } else {
+                            productSummary[productKey] = 1;
+                        }
+                    }
+                });
+    
+                Object.keys(productSummary).forEach(productName => {
+                    productDetails += `${productName}: ${productSummary[productName]} Piece\n`;
+                });
+    
+                const message = `Product Details:\n${productDetails}\nDelivery Fee: ${fixedDeliveryFee} EGP\nTotal Amount: ${totalAmount.toFixed(2)} EGP`;
+    
+                // Send email using EmailJS
+                emailjs.send('service_t4pka0k', 'template_hyd7vta', {
+                    from_name: name,
+                    from_phone: phone,
+                    from_address: address,
+                    delivery_fee: fixedDeliveryFee,
+                    total_amount: totalAmount.toFixed(2),
+                    message: message,
+                    to_email: 'medasabry1@gmail.com'
+                })
+                .then(function(response) {
+                    console.log('Sent successfully:', response);
+                    localStorage.removeItem('cart');
+                    // Show success message and redirect after a delay
+                    document.body.innerHTML = `
+                        <div class="confirmation-message">
+                            Your order has been placed successfully!<br>
+                            Thank you for your purchase. You will be redirected shortly.
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        window.location.href = 'thankyou.html';
+                    }, 10000); // Redirect after 10 seconds
+                }, function(error) {
+                    console.error('Failed to send:', error);
+                    alert('Failed to send order. Please try again.');
+                });
+            } else {
+                alert('Please fill out all fields.');
+            }
+        });
+    </script>
+    
+</body>
+</html>

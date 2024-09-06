@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart</title>
+    <style>
+       body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+
+        #cart-items {
+            width: 100%;
+            max-width: 1150px;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #cart-items div {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+
+        #cart-items img {
+            margin-right: 5px;
+            border-radius: 25px;
+            width: 45px;
+            height: auto;
+        }
+
+        #cart-items h2 {
+            font-size: 17px;
+            color: #34495e;
+            margin: 0;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        #cart-items p {
+            font-size: 12px;
+            color: red;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .quantity {
+            background-color: #e74c3c;
+            color: #ffffff;
+            border-radius: 350px;
+            padding: 5px 8px;
+            margin-left: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 15px;
+            height: 20px;
+        }
+
+        .remove-button {
+            background-color: #e74c3c;
+            color: #ffffff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-left: 5px;
+        }
+
+        .remove-button:hover {
+            background-color: #c0392b;
+        }
+
+        .home-button {
+            margin-top: 20px;
+            background-color: #3498db;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .home-button:hover {
+            background-color: #2980b9;
+        }
+
+        .total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 20px;
+        }
+
+        .empty-message {
+            font-size: 18px;
+            color: #7f8c8d;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .clear-button {
+            margin-top: 20px;
+            background-color: #e74c3c;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .clear-button:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart</h1>
+    <div id="cart-items"></div>
+    <div class="total" id="total-amount">Total: 0 EGP</div>
+
+    <a href="order.html" class="home-button" onclick="storeOrderDetails()">Proceed to Order</a>
+    <button class="clear-button" onclick="clearCart()">Clear Cart</button>
+
+    <script>
+        function displayCartItems() {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const cartItemsContainer = document.getElementById('cart-items');
+            const totalAmountElement = document.getElementById('total-amount');
+            cartItemsContainer.innerHTML = '';
+
+            let totalAmount = 0;
+
+            if (cart.length > 0) {
+                const uniqueCartItems = [];
+
+                cart.forEach(item => {
+                    if (item && item.title && item.image && item.price) {
+                        const existingItem = uniqueCartItems.find(cartItem =>
+                            cartItem.title === item.title &&
+                            cartItem.image === item.image &&
+                            cartItem.price === item.price &&
+                            cartItem.size === item.size
+                        );
+
+                        if (existingItem) {
+                            existingItem.quantity++;
+                        } else {
+                            uniqueCartItems.push({...item, quantity: 1});
+                        }
+                    }
+                });
+
+                uniqueCartItems.forEach(item => {
+                    const itemElement = document.createElement('div');
+                    const itemTotalPrice = item.price * item.quantity;
+                    itemElement.innerHTML = `
+                        <img src="${item.image}" alt="${item.title}">
+                        <div style="flex-grow: 1;">
+                            <h2>${item.title} <span class="quantity">${item.quantity}</span></h2>
+                            <p>Size: ${item.size}</p>
+                        </div>
+                        <p>${itemTotalPrice.toFixed(2)} EGP</p>
+                        <button class="remove-button" onclick="removeItem('${item.title}', '${item.image}', ${item.price}, '${item.size}')">Remove</button>
+                    `;
+                    cartItemsContainer.appendChild(itemElement);
+
+                    totalAmount += itemTotalPrice;
+                });
+
+                totalAmountElement.textContent = `Total: ${totalAmount.toFixed(2)} EGP`;
+            } else {
+                cartItemsContainer.innerHTML = '<p class="empty-message">Your cart is empty.</p>';
+                totalAmountElement.textContent = 'Total: 0 EGP';
+            }
+        }
+
+        function removeItem(title, image, price, size) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const itemIndex = cart.findIndex(item =>
+                item.title === title && item.image === image && item.price === price && item.size === size
+            );
+
+            if (itemIndex !== -1) {
+                cart.splice(itemIndex, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                displayCartItems();
+            }
+        }
+
+        function storeOrderDetails() {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const totalAmount = document.getElementById('total-amount').textContent.replace('Total: ', '').replace(' EGP', '');
+            localStorage.setItem('orderDetails', JSON.stringify({
+                items: cart,
+                total: totalAmount
+            }));
+        }
+
+        function clearCart() {
+            // مسح العنصر المخزن تحت المفتاح 'cart'
+            localStorage.removeItem('cart');
+            // تحديث عرض سلة التسوق بعد المسح
+            displayCartItems();
+        }
+
+        // Initial call to display cart items
+        displayCartItems();
+    </script>
+</body>
+</html>

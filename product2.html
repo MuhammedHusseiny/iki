@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADIDAS WHITE</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style1.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Styles for the product image gallery */
+        .product-gallery {
+            position: relative;
+            max-width: 850px;
+            margin: 0 auto;
+        }
+        
+        .product-gallery img.main-image {
+            width: auto;
+            height: 400px;
+            display: block;
+        }
+        
+        .thumbnail-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .thumbnail-container img {
+            width: 80px;
+            height: auto;
+            margin: 0 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .thumbnail-container img.active {
+            border-color: #3498db;
+        }
+        
+        .arrow {
+            position: absolute;
+            top: 30%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 24px;
+            padding: 10px;
+            cursor: pointer;
+        }
+        
+        .arrow.left {
+            left: 10px;
+        }
+        
+        .arrow.right {
+            right: 10px;
+        }
+    </style>
+</head>
+
+<body style="height: 100vh; display: grid; grid-template-rows: auto 1fr auto; align-items: center;">
+
+<header class="head">
+    <div id="navbar" class="logo">
+        <a href="index.html"><img style="margin-left: auto; margin-right: auto;" src="Iki new.png" alt="Logo"></a>
+    </div>
+    <div>
+        <a style="position: relative;" class="cart" href="cart.html" target="_blank">
+            <i class="fa fa-cart-plus" aria-hidden="true"></i>
+            <span class="products-number" id="cart-count"></span>
+        </a>
+    </div>
+</header>
+
+<main style="text-align: center;" class="flex">
+    <div class="product-gallery">
+        <img id="main-image" class="main-image" src="DSC00046 copy.jpg" alt="Product Image">
+        <div class="arrow left" onclick="changeImage(-1)">&lt;</div>
+        <div class="arrow right" onclick="changeImage(1)">&gt;</div>
+        <div class="thumbnail-container" id="thumbnail-container">
+            <img src="DSC00046 copy.jpg" class="thumbnail active" onclick="showImage(0)" alt="Thumbnail 1">
+            <img src="DSC00050 copy.jpg" class="thumbnail" onclick="showImage(1)" alt="Thumbnail 2">
+            <img src="DSC00042 copy.jpg" class="thumbnail" onclick="showImage(2)" alt="Thumbnail 3">
+            <img src="DSC00044 copy.jpg" class="thumbnail" onclick="showImage(3)" alt="Thumbnail 4">
+            <!-- Add more thumbnails as needed -->
+        </div>
+    </div>
+
+    <div class="product1">
+        <div style="justify-content: space-between;" class="flex">
+            <h2>ADIDAS WHITE T-SHIRT 3 STRIPES</h2>
+            <p class="price"> 699 EGP</p>
+        </div>
+        <div style="display: flex;justify-content: space-between;margin-top: 10px;">
+            <a href="Size chart .PNG" style="display: flex;justify-content: space-between; cursor: pointer;  color:black;"><button>size chart</button></a>
+            
+    <select id="size" required style="border-radius: 10px; ">
+        <option value="">Select Size</option>
+        <option value="Small"> Small</option>
+        <option value="Medium"> Medium </option>
+        <option value="Large"> Large  </option>
+        <option value="XXL"> X-Large </option>
+    </select>
+        </div>
+        <p class="DESC">Meet your new favourite tee. This classic adidas t-shirt boasts a oversized fit and a contrast hem for some refined vintage vibes. Pair it with your favourite dark denim for an effortlessly classic look. It's made of super-soft 100% cotton to keep you comfortable.Our cotton products support more sustainable cotton farming.</p>
+        
+        <button class="flex order-now" onclick="addToCart()" style="font-size: 15px;" >
+            Add To Cart
+            <i class="fa fa-cart-plus" aria-hidden="true" style="margin-left: 10px;"></i>
+        </button>
+        
+        
+    </div>
+    
+</main>
+
+<script>
+    // Initial setup for the image gallery
+    let currentIndex = 0;
+    const images = document.querySelectorAll('.thumbnail');
+    const mainImage = document.getElementById('main-image');
+
+    function showImage(index) {
+        currentIndex = index;
+        mainImage.src = images[index].src;
+        updateThumbnailSelection();
+    }
+
+    function changeImage(direction) {
+        currentIndex = (currentIndex + direction + images.length) % images.length;
+        showImage(currentIndex);
+    }
+
+    function updateThumbnailSelection() {
+        images.forEach((img, index) => {
+            img.classList.toggle('active', index === currentIndex);
+        });
+    }
+
+    // Initialize gallery with the first image
+    showImage(currentIndex);
+
+    // Add to cart functionality
+    document.addEventListener('DOMContentLoaded', updateCartCount);
+
+    function addToCart() {
+        const selectedSize = document.getElementById('size').value;
+        if (!selectedSize) {
+            alert('Please select a size.');
+            return;
+        }
+
+        const product = {
+            id: 2,
+            title: 'ADIDAS WHITE',
+            price: 699,
+            image: mainImage.src,
+            quantity: 2,
+            size: selectedSize // Add selected size to the product
+        };
+
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        cart.push(product);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        
+        // Update cart count
+        updateCartCount();
+    }
+
+    function updateCartCount() {
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        document.getElementById('cart-count').textContent = cart.length;
+    }
+</script>
+
+</body>
+</html>
